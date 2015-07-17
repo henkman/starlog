@@ -3,7 +3,7 @@ SRCS=starlog.c
 OBJS=$(SRCS:.c=.o)
 CFLAGS=-O3 -nostdlib -fno-asynchronous-unwind-tables -fno-builtin -fno-ident -ffunction-sections -fdata-sections -Wall
 LIBS=-luser32 -lkernel32
-LDFLAGS=-static -nostdlib -fno-builtin -s -Wl,-e,__main,--gc-sections,-subsystem,windows $(LIBS)
+LDFLAGS=-static -nostdlib -fno-builtin -s -Wl,--gc-sections,-subsystem,windows $(LIBS)
 ARCH=32
 ifeq ($(ARCH), 64)
 	WINDRES_ARCH=pe-x86-64

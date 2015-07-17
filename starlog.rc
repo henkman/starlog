@@ -1,1 +1,2 @@
 1 ICON "starlog.ico"
+2 RT_MANIFEST "starlog.exe.manifest"
