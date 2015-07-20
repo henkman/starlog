@@ -53,8 +53,8 @@ starlog_log(Starlog *s)
 	unsigned short *log = NULL;
 	DWORD textlen, loglen;
 	SYSTEMTIME t;
-	
-	GetLocalTime(&t);	
+
+	GetLocalTime(&t);
 	textlen = GetWindowTextLengthW(s->edit_log);
 	if(!textlen) {
 		return;
@@ -84,32 +84,31 @@ static LRESULT CALLBACK
 WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	Starlog *s = (Starlog *) GetWindowLongPtr(hwnd, GWLP_USERDATA);
-    switch(msg) {
+	switch(msg) {
 	case WM_COMMAND:
-		switch(LOWORD(wParam))
-		{
+		switch(LOWORD(wParam)) {
 		case IDC_SAVE_CLOSE:
 			starlog_log(s);
 		case IDC_CLOSE:
 			ShowWindow(s->hwnd, SW_HIDE);
-		break;
+			break;
 		}
-	break;
+		break;
 	case WM_CHAR:
-		if (wParam =='A' && (GetKeyState(VK_CONTROL) & 0x8000)!=0) {
+		if(wParam =='A' && (GetKeyState(VK_CONTROL) & 0x8000)!=0) {
 			SendMessage(s->edit_log, EM_SETSEL, 0, -1);
 		}
-	break;
+		break;
 	case WM_CLOSE:
 		DestroyWindow(hwnd);
-	break;
+		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
-	break;
+		break;
 	default:
 		return DefWindowProc(hwnd, msg, wParam, lParam);
-    }
-    return 0;
+	}
+	return 0;
 }
 
 static void
@@ -118,36 +117,36 @@ starlog_init(Starlog *s, HINSTANCE hInstance)
 	const char className[] = "starlog";
 	WNDCLASSEX wc;
 
-    wc.cbSize        = sizeof(WNDCLASSEX);
-    wc.style         = 0;
-    wc.lpfnWndProc   = WndProc;
-    wc.cbClsExtra    = sizeof(Starlog*);
-    wc.cbWndExtra    = 0;
-    wc.hInstance     = hInstance;
-    wc.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
-    wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-    wc.lpszMenuName  = NULL;
-    wc.lpszClassName = className;
-    wc.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
+	wc.cbSize = sizeof(WNDCLASSEX);
+	wc.style = 0;
+	wc.lpfnWndProc = WndProc;
+	wc.cbClsExtra = sizeof(Starlog *);
+	wc.cbWndExtra = 0;
+	wc.hInstance = hInstance;
+	wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+	wc.lpszMenuName = NULL;
+	wc.lpszClassName = className;
+	wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
 	if(!RegisterClassEx(&wc)) {
-        MessageBox(NULL, "Window Registration Failed!", "error",
-            MB_ICONEXCLAMATION|MB_OK);
-        ExitProcess(1);
-    }
+		MessageBox(NULL, "Window Registration Failed!", "error",
+			MB_ICONEXCLAMATION|MB_OK);
+		ExitProcess(1);
+	}
 	s->hwnd = CreateWindowEx(
-        WS_EX_CLIENTEDGE,
-        className, "starlog",
-        WS_OVERLAPPED|WS_CAPTION|WS_THICKFRAME|WS_SYSMENU,
-        CW_USEDEFAULT, CW_USEDEFAULT, WIN_WIDTH, WIN_HEIGHT,
-        NULL, NULL, hInstance, NULL);
+		WS_EX_CLIENTEDGE,
+		className, "starlog",
+		WS_OVERLAPPED|WS_CAPTION|WS_THICKFRAME|WS_SYSMENU,
+		CW_USEDEFAULT, CW_USEDEFAULT, WIN_WIDTH, WIN_HEIGHT,
+		NULL, NULL, hInstance, NULL);
 
-    if(!s->hwnd) {
-        MessageBox(NULL, "Window Creation Failed!", "error",
-            MB_ICONEXCLAMATION|MB_OK);
-        ExitProcess(1);
-    }
-	
+	if(!s->hwnd) {
+		MessageBox(NULL, "Window Creation Failed!", "error",
+			MB_ICONEXCLAMATION|MB_OK);
+		ExitProcess(1);
+	}
+
 	s->edit_log = CreateWindowEx(0,
 		"Edit", "",
 		WS_CHILD|WS_VISIBLE|WS_TABSTOP|ES_MULTILINE|
@@ -155,7 +154,7 @@ starlog_init(Starlog *s, HINSTANCE hInstance)
 		10, 10, WIN_WIDTH-40, WIN_HEIGHT-90,
 		s->hwnd, NULL,
 		hInstance, NULL);
-		
+
 	s->bu_save_close = CreateWindowEx(0,
 		"Button", "SAVE && CLOSE",
 		WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_DEFPUSHBUTTON,
@@ -169,19 +168,19 @@ starlog_init(Starlog *s, HINSTANCE hInstance)
 		140, WIN_HEIGHT-75, 120, 24,
 		s->hwnd, (HMENU)IDC_CLOSE,
 		hInstance, NULL);
-		
+
 	SetWindowLongPtr(s->hwnd, GWLP_USERDATA, (LONG_PTR)s);
-	
+
 	RECT rc;
 	GetWindowRect(s->hwnd, &rc) ;
 	SetWindowPos(s->hwnd, 0,
 		(GetSystemMetrics(SM_CXSCREEN) - rc.right)/2,
 		(GetSystemMetrics(SM_CYSCREEN) - rc.bottom)/2,
 		0, 0, SWP_NOZORDER|SWP_NOSIZE);
-	
-	starlog_open_window(s);
-    UpdateWindow(s->hwnd);
-	
+
+	// starlog_open_window(s);
+	// UpdateWindow(s->hwnd);
+
 	register_hotkey(HOTKEY_LOG,
 		MOD_ALT|MOD_CONTROL|MOD_SHIFT|MOD_NOREPEAT, 'L');
 }
@@ -189,7 +188,7 @@ starlog_init(Starlog *s, HINSTANCE hInstance)
 static void
 starlog_deinit(Starlog *s)
 {
-	
+
 }
 
 int WINAPI
@@ -199,7 +198,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Starlog s = {0};
 	MSG msg;
 	starlog_init(&s, hInstance);
-    while(GetMessage(&msg, NULL, 0, 0)) {
+	while(GetMessage(&msg, NULL, 0, 0)) {
 		if(msg.message == WM_HOTKEY) {
 			if(msg.wParam == HOTKEY_QUIT) {
 				break;
@@ -209,9 +208,9 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			}
 			continue;
 		}
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
 	starlog_deinit(&s);
 	ExitProcess(0);
 }
