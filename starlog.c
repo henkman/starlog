@@ -20,7 +20,6 @@ typedef enum {
 typedef struct {
 	HWND hwnd;
 	HWND edit_log;
-	WNDPROC edit_proc;
 	HWND bu_save_close;
 	HWND bu_close;
 } Starlog;
@@ -36,20 +35,34 @@ register_hotkey(int id, int mod, int vk)
 }
 
 static void
+center_window(HWND window)
+{
+	int x, y, w, h;
+	RECT rc;
+	GetWindowRect(window, &rc);
+	w = rc.right-rc.left;
+	h = rc.bottom-rc.top;
+	x = (GetSystemMetrics(SM_CXSCREEN)-w)/2;
+	y = (GetSystemMetrics(SM_CYSCREEN)-h)/2;
+	SetWindowPos(window, 0, x, y, 0, 0, SWP_NOZORDER|SWP_NOSIZE);
+}
+
+static void
 starlog_open_window(Starlog *s)
 {
 	if(IsWindowVisible(s->hwnd)) {
 		return;
 	}
-	SetWindowText(s->edit_log, "");
+	center_window(s->hwnd);
+	ShowWindow(s->hwnd, SW_SHOW);
+	SetForegroundWindow(s->hwnd);
 	SetFocus(s->edit_log);
-	ShowWindow(s->hwnd, SW_SHOWNORMAL);
 }
 
 static void
 starlog_log(Starlog *s)
 {
-	unsigned short *text = NULL;
+	const size_t MAX_BYTES = 1024;
 	unsigned short *log = NULL;
 	DWORD textlen, loglen;
 	SYSTEMTIME t;
@@ -59,13 +72,14 @@ starlog_log(Starlog *s)
 	if(!textlen) {
 		return;
 	}
-	text = HeapAlloc(GetProcessHeap(), 0, sizeof(short)*textlen);
-	GetWindowTextW(s->edit_log, text, sizeof(short)*textlen);
-	loglen = sizeof(char)*1024;
-	log = HeapAlloc(GetProcessHeap(), 0, sizeof(char)*loglen);
-	loglen = wsprintfW(log, L"~~~ %02d.%02d.%04d %02d:%02d:%02d ~~~\n%s\n",
-		t.wDay, t.wMonth, t.wYear, t.wHour, t.wMinute, t.wSecond, text);
-	HeapFree(GetProcessHeap(), 0, text);
+	log = HeapAlloc(GetProcessHeap(), 0, sizeof(char)*MAX_BYTES);
+	loglen = wsprintfW(log, L"~~~ %02d.%02d.%04d %02d:%02d:%02d ~~~\r\n",
+		t.wDay, t.wMonth, t.wYear, t.wHour, t.wMinute, t.wSecond);
+	loglen += GetWindowTextW(s->edit_log, &log[loglen],
+		sizeof(short)*(MAX_BYTES-loglen));
+	log[loglen] = '\r';
+	log[loglen+1] = '\n';
+	log[loglen+2] = 0;
 	if(loglen) {
 		HANDLE fd = CreateFile(".\\star.log",
 			FILE_APPEND_DATA, FILE_SHARE_READ,
@@ -90,7 +104,8 @@ WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case IDC_SAVE_CLOSE:
 			starlog_log(s);
 		case IDC_CLOSE:
-			ShowWindow(s->hwnd, SW_HIDE);
+			SetWindowText(s->edit_log, "");
+			ShowWindow(hwnd, SW_HIDE);
 			break;
 		}
 		break;
@@ -170,16 +185,6 @@ starlog_init(Starlog *s, HINSTANCE hInstance)
 		hInstance, NULL);
 
 	SetWindowLongPtr(s->hwnd, GWLP_USERDATA, (LONG_PTR)s);
-
-	RECT rc;
-	GetWindowRect(s->hwnd, &rc) ;
-	SetWindowPos(s->hwnd, 0,
-		(GetSystemMetrics(SM_CXSCREEN) - rc.right)/2,
-		(GetSystemMetrics(SM_CYSCREEN) - rc.bottom)/2,
-		0, 0, SWP_NOZORDER|SWP_NOSIZE);
-
-	// starlog_open_window(s);
-	// UpdateWindow(s->hwnd);
 
 	register_hotkey(HOTKEY_LOG,
 		MOD_ALT|MOD_CONTROL|MOD_SHIFT|MOD_NOREPEAT, 'L');
