@@ -5,6 +5,7 @@
 #define WIN_WIDTH 600
 #define WIN_HEIGHT 200
 
+#define IDI_ICON 1
 #define IDC_SAVE_CLOSE 102
 #define IDC_CLOSE 103
 
@@ -131,19 +132,20 @@ starlog_init(Starlog *s, HINSTANCE hInstance)
 {
 	const char className[] = "starlog";
 	WNDCLASSEX wc;
-
+	
 	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.style = 0;
 	wc.lpfnWndProc = WndProc;
 	wc.cbClsExtra = sizeof(Starlog *);
 	wc.cbWndExtra = 0;
 	wc.hInstance = hInstance;
-	wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+	wc.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON));
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
 	wc.lpszMenuName = NULL;
 	wc.lpszClassName = className;
-	wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+	wc.hIconSm = (HICON)LoadImage(GetModuleHandle(NULL),
+		MAKEINTRESOURCE(IDI_ICON), IMAGE_ICON, 16, 16, 0);
 	if(!RegisterClassEx(&wc)) {
 		MessageBox(NULL, "Window Registration Failed!", "error",
 			MB_ICONEXCLAMATION|MB_OK);
