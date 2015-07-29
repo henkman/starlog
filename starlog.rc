@@ -1,1 +1,6 @@
 1 ICON "starlog.ico"
+FontAccel ACCELERATORS 
+{ 
+    "S", 2, CONTROL, VIRTKEY
+    0x1B, 3, VIRTKEY 
+} 

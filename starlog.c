@@ -6,8 +6,8 @@
 #define WIN_HEIGHT 200
 
 #define IDI_ICON 1
-#define IDC_SAVE_CLOSE 102
-#define IDC_CLOSE 103
+#define IDC_SAVE_CLOSE 2
+#define IDC_CLOSE 3
 
 #ifndef MOD_NOREPEAT
 #define MOD_NOREPEAT 0x4000
@@ -101,6 +101,9 @@ WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	Starlog *s = (Starlog *) GetWindowLongPtr(hwnd, GWLP_USERDATA);
 	switch(msg) {
 	case WM_COMMAND:
+		if(!IsWindowVisible(s->hwnd)) {
+			break;
+		}
 		switch(LOWORD(wParam)) {
 		case IDC_SAVE_CLOSE:
 			starlog_log(s);
@@ -108,11 +111,6 @@ WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			SetWindowText(s->edit_log, "");
 			ShowWindow(hwnd, SW_HIDE);
 			break;
-		}
-		break;
-	case WM_CHAR:
-		if(wParam =='A' && (GetKeyState(VK_CONTROL) & 0x8000)!=0) {
-			SendMessage(s->edit_log, EM_SETSEL, 0, -1);
 		}
 		break;
 	case WM_CLOSE:
@@ -175,14 +173,14 @@ starlog_init(Starlog *s, HINSTANCE hInstance)
 	s->bu_save_close = CreateWindowEx(0,
 		"Button", "SAVE && CLOSE",
 		WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_DEFPUSHBUTTON,
-		10, WIN_HEIGHT-75, 120, 24,
+		10, WIN_HEIGHT-75, 130, 24,
 		s->hwnd, (HMENU)IDC_SAVE_CLOSE,
 		hInstance, NULL);
 
 	s->bu_close = CreateWindowEx(0,
 		"Button", "CLOSE",
 		WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_DEFPUSHBUTTON,
-		140, WIN_HEIGHT-75, 120, 24,
+		150, WIN_HEIGHT-75, 130, 24,
 		s->hwnd, (HMENU)IDC_CLOSE,
 		hInstance, NULL);
 
@@ -205,6 +203,10 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Starlog s = {0};
 	MSG msg;
 	starlog_init(&s, hInstance);
+	HACCEL haccel = LoadAccelerators(NULL, "FontAccel"); 
+    if(haccel == NULL) {
+		ExitProcess(1);
+	}
 	while(GetMessage(&msg, NULL, 0, 0)) {
 		if(msg.message == WM_HOTKEY) {
 			if(msg.wParam == HOTKEY_QUIT) {
@@ -215,8 +217,10 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			}
 			continue;
 		}
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+		if(!TranslateAccelerator(s.hwnd, haccel, &msg)) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
 	}
 	starlog_deinit(&s);
 	ExitProcess(0);
